@@ -1,10 +1,10 @@
-// Exports current sheet as JSON and displays.
+// Exports current sheet as JSON and displays in message box.
 function exportJSON() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var rowsData = getRowsData_(sheet);
   var jsonString = Utilities.jsonStringify(rowsData).replace(/},/gi, '},\n');
-  // Create the UiApp object myapp and set the title text
+  
   var app = UiApp.createApplication().setTitle('Exported JSON'); 
   var scrollPanel = app.createScrollPanel(); 
   var textArea    = app.createTextArea();
@@ -13,7 +13,6 @@ function exportJSON() {
   textArea.setHeight('100%');
   scrollPanel.add(textArea);
   app.add(scrollPanel); 
- // Use the show() method on the Spreadsheet to display the UiApp object and all elements associated with it. 
   ss.show(app); 
 }
 
