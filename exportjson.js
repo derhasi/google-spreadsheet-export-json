@@ -1,6 +1,5 @@
-// Exports current sheet as JSON and displays in message box.
-
-
+// Includes functions for exporting active sheet or all sheets as JSON object (also Python object syntax compatible).
+// Tweak the makePrettyJSON_ function to customize what kind of JSON to export.
 
 function exportAllSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
