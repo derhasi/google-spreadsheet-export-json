@@ -1,16 +1,50 @@
 // Exports current sheet as JSON and displays in message box.
-function exportJSON() {
+
+
+
+function exportAllSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+  var sheetsData = {};
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    var rowsData = getRowsData_(sheet);
+    var sheetName = sheet.getName(); 
+    sheetsData[sheetName] = rowsData;
+  }
+  var json = makePrettyJSON_(sheetsData);
+  displayText_(json);
+}
+
+function exportSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var rowsData = getRowsData_(sheet);
-  var jsonString = Utilities.jsonStringify(rowsData).replace(/},/gi, '},\n');
-  
-  var app = UiApp.createApplication().setTitle('Exported JSON'); 
+  var json = makePrettyJSON_(rowsData);
+  displayText_(json);
+}
+
+// Can either output fully indented JSON, newlined JSON, or single-line JSON
+var JSON_STYLE = 'indented';
+function makePrettyJSON_(object) {
+  if (JSON_STYLE == 'indented') {
+    return JSON.stringify(object, null, 4);
+  } else if (JSON_STYLE == 'newlines') {
+    var jsonString = Utilities.jsonStringify(object);
+    var prettyJSON = jsonString.replace(/},/gi, '},\n');
+    prettyJSON = prettyJSON.replace(/":\[{"/gi, '":\n[{"');
+    prettyJSON = prettyJSON.replace(/}\],/gi, '}],\n');
+    return prettyJSON;
+  } else {
+    return Utilities.jsonStringify(object);
+  }
+}
+
+function displayText_(text) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var app = UiApp.createApplication().setTitle('Results');;
   var scrollPanel = app.createScrollPanel(); 
-  var textArea    = app.createTextArea();
-  textArea.setText(jsonString);
-  textArea.setWidth('100%');
-  textArea.setHeight('100%');
+  var textArea    = app.createTextArea().setText(text).setWidth('100%').setHeight('100%');
   scrollPanel.add(textArea);
   app.add(scrollPanel); 
   ss.show(app); 
