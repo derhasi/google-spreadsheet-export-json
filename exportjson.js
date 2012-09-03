@@ -8,17 +8,22 @@ var FORMAT_PRETTY    = 'Pretty';
 var LANGUAGE_JS      = 'JavaScript';
 var LANGUAGE_PYTHON  = 'Python';
 
+var STRUCTURE_LIST = 'List';
+var STRUCTURE_HASH = 'Hash (keyed by "id" column)';
+
 function exportOptions() {
   var doc = SpreadsheetApp.getActiveSpreadsheet();
   var app = UiApp.createApplication().setTitle('Export JSON');
   
-  var grid = app.createGrid(3, 2);
+  var grid = app.createGrid(4, 2);
   grid.setWidget(0, 0, makeLabel(app, 'Language:'));
   grid.setWidget(0, 1, makeListBox(app, 'language', [LANGUAGE_JS, LANGUAGE_PYTHON]));
   grid.setWidget(1, 0, makeLabel(app, 'Format:'));
   grid.setWidget(1, 1, makeListBox(app, 'format', [FORMAT_PRETTY, FORMAT_MULTILINE, FORMAT_ONELINE]));
-  grid.setWidget(2, 0, makeButton(app, grid, 'Export Active Sheet', 'exportSheet'));
-  grid.setWidget(2, 1, makeButton(app, grid, 'Export All Sheets', 'exportAllSheets'));
+  grid.setWidget(2, 0, makeLabel(app, 'Structure:'));
+  grid.setWidget(2, 1, makeListBox(app, 'structure', [STRUCTURE_LIST, STRUCTURE_HASH]));
+  grid.setWidget(3, 0, makeButton(app, grid, 'Export Active Sheet', 'exportSheet'));
+  grid.setWidget(3, 1, makeButton(app, grid, 'Export All Sheets', 'exportAllSheets'));
   app.add(grid);
   
   app.add(makeLabel(app, '', 'status'));
@@ -74,7 +79,7 @@ function exportAllSheets(e) {
   var sheetsData = {};
   for (var i = 0; i < sheets.length; i++) {
     var sheet = sheets[i];
-    var rowsData = getRowsData_(sheet);
+    var rowsData = getRowsData_(sheet, getExportOptions(e));
     var sheetName = sheet.getName(); 
     sheetsData[sheetName] = rowsData;
   }
@@ -86,7 +91,7 @@ function exportSheet(e) {
   updateStatus('Exported current sheet.');
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
-  var rowsData = getRowsData_(sheet);
+  var rowsData = getRowsData_(sheet, getExportOptions(e));
   var json = makeJSON_(rowsData, getExportOptions(e));
   return displayText_(json);
 }
@@ -96,10 +101,12 @@ function getExportOptions(e) {
   
   options.language = e && e.parameter.language || LANGUAGE_JS;
   options.format   = e && e.parameter.format || FORMAT_PRETTY;
+  options.structure = e && e.parameter.structure || STRUCTURE_LIST;
   
   var cache = CacheService.getPublicCache();
   cache.put('language', options.language);
   cache.put('format',   options.format);
+  cache.put('structure',   options.structure);
   
   Logger.log(options);
   return options;
@@ -149,11 +156,20 @@ function displayText_(text) {
 //   - columnHeadersRowIndex: specifies the row number where the column names are stored.
 //       This argument is optional and it defaults to the row immediately above range; 
 // Returns an Array of objects.
-function getRowsData_(sheet) {
+function getRowsData_(sheet, options) {
   var headersRange = sheet.getRange(1, 1, sheet.getFrozenRows(), sheet.getMaxColumns());
   var headers = headersRange.getValues()[0];
   var dataRange = sheet.getRange(sheet.getFrozenRows()+1, 1, sheet.getMaxRows(), sheet.getMaxColumns());
-  return getObjects_(dataRange.getValues(), normalizeHeaders_(headers));
+  var objects = getObjects_(dataRange.getValues(), normalizeHeaders_(headers));
+  if (options.structure == STRUCTURE_HASH) {
+    var objectsById = {};
+    objects.forEach(function(object) {
+      objectsById[object.id] = object;
+    });
+    return objectsById;
+  } else {
+    return objects;
+  }
 }
 
 // getColumnsData iterates column by column in the input range and returns an array of objects.
