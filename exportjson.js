@@ -20,8 +20,8 @@ var DEFAULT_STRUCTURE = STRUCTURE_LIST;
 function onOpen() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var menuEntries = [
-    {name: "Export JSON for all sheets", functionName: "exportAllSheets"},
     {name: "Export JSON for this sheet", functionName: "exportSheet"},
+    {name: "Export JSON for all sheets", functionName: "exportAllSheets"},
     {name: "Configure export", functionName: "exportOptions"},
   ];
   ss.addMenu("Export JSON", menuEntries);
@@ -43,8 +43,6 @@ function exportOptions() {
   grid.setWidget(3, 1, makeButton(app, grid, 'Export All Sheets', 'exportAllSheets'));
   app.add(grid);
   
-  app.add(makeLabel(app, '', 'status'));
-  app.add(makeTextBox(app, 'json'));
   doc.show(app);
 }
 
@@ -83,11 +81,6 @@ function makeTextBox(app, name) {
   return textArea;
 }
 
-function updateStatus(text) {
-  var app = UiApp.getActiveApplication();
-  if (app) app.getElementById('status').setText(text);
-}
-
 function exportAllSheets(e) {
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -104,7 +97,6 @@ function exportAllSheets(e) {
 }
 
 function exportSheet(e) {
-  updateStatus('Exported current sheet.');
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var rowsData = getRowsData_(sheet, getExportOptions(e));
