@@ -11,6 +11,23 @@ var LANGUAGE_PYTHON  = 'Python';
 var STRUCTURE_LIST = 'List';
 var STRUCTURE_HASH = 'Hash (keyed by "id" column)';
 
+/* Defaults for this particular spreadsheet, change as desired */
+var DEFAULT_FORMAT = FORMAT_PRETTY;
+var DEFAULT_LANGUAGE = LANGUAGE_JS;
+var DEFAULT_STRUCTURE = STRUCTURE_LIST;
+
+
+function onOpen() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var menuEntries = [
+    {name: "Export JSON for all sheets", functionName: "exportAllSheets"},
+    {name: "Export JSON for this sheet", functionName: "exportSheet"},
+    {name: "Configure export", functionName: "exportOptions"},
+  ];
+  ss.addMenu("Export JSON", menuEntries);
+}
+    
+    
 function exportOptions() {
   var doc = SpreadsheetApp.getActiveSpreadsheet();
   var app = UiApp.createApplication().setTitle('Export JSON');
@@ -72,7 +89,6 @@ function updateStatus(text) {
 }
 
 function exportAllSheets(e) {
-  updateStatus('Exported all sheets.');
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ss.getSheets();
@@ -99,9 +115,9 @@ function exportSheet(e) {
 function getExportOptions(e) {
   var options = {};
   
-  options.language = e && e.parameter.language || LANGUAGE_JS;
-  options.format   = e && e.parameter.format || FORMAT_PRETTY;
-  options.structure = e && e.parameter.structure || STRUCTURE_LIST;
+  options.language = e && e.parameter.language || DEFAULT_LANGUAGE;
+  options.format   = e && e.parameter.format || DEFAULT_FORMAT;
+  options.structure = e && e.parameter.structure || DEFAULT_STRUCTURE;
   
   var cache = CacheService.getPublicCache();
   cache.put('language', options.language);
@@ -131,20 +147,11 @@ function makeJSON_(object, options) {
 }
 
 function displayText_(text) {
-  var needToShow = false;
-  var app = UiApp.getActiveApplication();
- 
-  if (!app) {
-    app = UiApp.createApplication().setTitle('Exported JSON');
-    app.add(makeTextBox(app, 'json'));
-    needToShow = true;
-  }
+  var app = UiApp.createApplication().setTitle('Exported JSON');
+  app.add(makeTextBox(app, 'json'));
   app.getElementById('json').setText(text);
-  
-  if (needToShow) {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    ss.show(app);
-  }
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); 
+  ss.show(app);
   return app; 
 }
 
